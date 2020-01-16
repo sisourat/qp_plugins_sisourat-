@@ -1,5 +1,3 @@
-
-
 program cippres_fano
   use general
   implicit none
@@ -9,36 +7,44 @@ program cippres_fano
 ! cippres_fano computes the H matrice couplings between the CI eigenvectors of ici1 and ici2 runs
   END_DOC
 
-  integer :: ici
-
-! TODO Read eigenvalues/vectors in EZFIO (do not recompute them)
 ! TODO Read the info (ici1, ici2,...) from an input
-
-! TODO Print couplings in EZFIO
 
 ! GENERAL
 ! MANU : how to get input filename from command line qp run??
-
 
 ! TODO Compute dipole matrix elements between two different CI runs
 ! TODO Include Stieltjes in qp
 
   if(ifcsf==2) then
 
-    !read(10,*) ici
-    call ezfio_set_cippres_ici1(4)
-    call ezfio_set_cippres_ici2(3)
+    if(ici1==0) then
+       print*, "Please set ici1 (initial states)"
+       print*, "qp set cippres ici1 X "
+       stop
+    endif
 
-    print*,ici1,ici2,n_ciruns_cippres
-    print*, n_csf_cippres(ici1)
-    print*, n_csf_cippres(ici2)
+    if(ici2==0) then
+       print*, "Please set ici2 (final states)"
+       print*, "qp set cippres ici2 X "
+       stop
+    endif
 
-    print*, twoe_couplings_cippres(:,:)
-    call ezfio_set_cippres_ifcsf(3)
+!      call ezfio_get_cippres_ici1(ici1)
+!      call ezfio_get_cippres_ici2(ici2)
+     if(ici1/=0 .and. ici2/=0) then
+      print*,ici1,ici2
+      print*, twoe_couplings_cippres(:,:)
+      call ezfio_set_cippres_cfano_cippres(twoe_couplings_cippres)
+      call ezfio_set_cippres_efano_cippres(e_couplings_cippres)
+      call ezfio_set_cippres_ifcsf(3)
+      stop
+     endif
 
   else 
 
-    print*, "Please run cippres_runci first"
+    print*, "ifcsf = ", ifcsf
+    print*, "but it should be equal to 2 for Fano calculations"
+    print*, "Please run cippres_runci first or type qp set cippres ifcsf 2"
 
   endif
 

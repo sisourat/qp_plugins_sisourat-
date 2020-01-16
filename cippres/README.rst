@@ -27,8 +27,9 @@ qp set_file He.ezfio
 0') (run scf prior to cipres runs)
 qp run scf
 
-0'') (2e integrals AO to MO transformation, not mandatory but highly recommanded for better performance)
-qp run four_idx_transform
+!! WARNING : cippres_fano and cippres_dip crashes " randomly when using four_idx_transform see with Manu/Anthony
+!! 0'') (2e integrals AO to MO transformation, not mandatory but highly recommanded for better performance)
+!! qp run four_idx_transform
 
 1) set the xml input file in EZFIO
  qp set cippres finput_cippres test.xml
@@ -36,5 +37,5 @@ qp run four_idx_transform
 2) generate CSFs in header.txt and list.txt
  qp run cippres_gencsf
 
-3)  run CI if ifcsf 1  
+3)  run CI (if ifcsf 1)
  qp run cippres_runci

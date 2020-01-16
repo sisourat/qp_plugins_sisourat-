@@ -1,5 +1,3 @@
-
-
 program cippres_stieltjes
   use general
   use interpolation
@@ -40,22 +38,18 @@ program cippres_stieltjes
 
   if(ifcsf==3) then
 
+    if(ifanosta==0) then
+       print*, "Please set ifanosta"
+       print*, "qp set cippres ifanosta X "
+       stop
+    endif
+
 ! reads and sorts energy and matrix elements
 
-  
-  do i = 1, n_csf_cippres(ici1)
-    do j = 1, n_csf_cippres(ici2)
-      print*,j,i,cfano_cippres(j,i),efano_cippres(j,i)
-    enddo
-  enddo
-  stop
-
-  read(*,*)npt
+  npt = n_csf_cippres(ici2)
   allocate(e(npt),g(npt))
-
-  do i = 1, npt
-    read(*,*)e(i),g(i)
-  enddo
+  e(:) = efano_cippres(1:n_csf_cippres(ici2),ifanosta)
+  g(:) = cfano_cippres(1:n_csf_cippres(ici2),ifanosta)
  
   if(sum(g)==0d0) then
     write(*,*)"All matrix elements are zero, I stop"

@@ -1,5 +1,3 @@
-
-
 program cippres_runci
   use general
   implicit none
@@ -30,6 +28,8 @@ program cippres_runci
       print*,'CI eigval =', eigvalues_cippres(1:n_csf_cippres(i),i)
     enddo
 
+   call ezfio_set_cippres_eigvalues_cippres(eigvalues_cippres)
+   call ezfio_set_cippres_eigvectors_cippres(eigvectors_cippres)
    call ezfio_set_cippres_ifcsf(2)
 
   else

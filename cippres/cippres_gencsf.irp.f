@@ -55,7 +55,7 @@ subroutine generate_csfs(finput)
  integer(bit_kind), allocatable :: csf_basis_tmp(:,:,:,:,:)
 
 ! the python script will write the info and list of CSFs, for as many CIruns as given in finput, into header$irun.txt and list$irun.txt ($irun=1,2,3,....)
-  call system('python $QP_ROOT/plugins/local/cippres/scripts/generate_csfs.py '//trim(finput))
+  call system('python $QP_ROOT/plugins/qp_plugins_sisourat-/cippres/scripts/generate_csfs.py '//trim(finput))
 
 ! save the info and list of CSFs into EZFIO
   open(unit=10,file='parser.txt') 
