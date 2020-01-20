@@ -9,24 +9,29 @@ program cippres_stieltjes
   END_DOC
 
   integer :: npt
-  integer, parameter :: QR_K = selected_real_kind (32)
+  integer, parameter :: QR_K = 16 !selected_real_kind (32)
   real (kind=QR_K), allocatable, dimension(:) :: e, g
 
-  integer :: nmax = 30 ! according to Mueller-Plathe and Diercksen Stieltjes is inaccurate for n>=15
-!real (kind=QR_K), dimension(0:nmax) :: sk
-!real (kind=QR_K), dimension(nmax,nmax) ::  e1, g1, e2, g2
-  real (kind=QR_K), allocatable, dimension(:) :: sk
+  integer :: nmin=21, nmax = 26 ! according to Mueller-Plathe and Diercksen Stieltjes is inaccurate for n>=15
+!  real (kind=QR_K), dimension(0:nmax) :: sk
+!  real (kind=QR_K), dimension(nmax,nmax) ::  e1, g1, e2, g2
+  real (kind=QR_K), allocatable, dimension(:) :: sk, gord
   real (kind=QR_K), allocatable, dimension(:,:) ::  e1, g1
+  real (kind=QR_K), allocatable, dimension(:) :: eallord,gallord
   real (kind=QR_K) :: shift1 = 0.1d0
   integer :: imax1, imax2
   integer :: inmax, ishift
-  integer :: i, j
+  integer :: i, j, k, ichan
   integer :: exit_cycle
   character(len=60) :: fname
 
 ! Tsveta
   real (kind=QR_K) :: g_
-  real (kind=QR_K) :: temp
+  real (kind=QR_K) :: temp, gav, stadev, gtot
+
+  integer :: nsta
+  real (kind=QR_K), allocatable, dimension(:,:) :: gpart
+  real (kind=QR_K), allocatable, dimension(:) :: st_gpart
 
 ! TODO Read couplings in EZFIO
 ! TODO Adapt Stieltjes code
@@ -59,50 +64,63 @@ program cippres_stieltjes
   call sort2(npt,e,g)
   ishift = 2
   shift1 = ishift * 0.1d0
-  write(fname, '(A8,I1,A4)')"gamma.sh",ishift,".dat"
-  open(237,file=fname)
 
-  do inmax = 15, nmax
-     allocate(sk(0:inmax))
-     allocate(e1(inmax,inmax), g1(inmax,inmax))       
-     
-! computes the nmax moments of the matrix elements
-      open(unit=10,file='moments.txt')
-      sk(:) = 0q0
-      do i = 0, inmax
-         do j = 1, npt
-            sk(i) = sk(i) + e(j)**i*g(j)
-         enddo
-       write(10,*)i,abs(sk(i))
-      enddo
-      close(10)
-    
-! "images" the matrix elements for two different shift values, may be used to evaluate the highest accurate order
-      shift1 = shift1 + abs(e(1))
-      e(:) = e(:) + shift1
-      call imaging(npt,e,g,inmax,imax1,e1,g1)
-      e(:) = e(:) - shift1
-       
-      do i = 1, imax1
-       do  j = 1, i-1
-        write(100+i,'(2(f20.16,1X))')e1(j,i)-shift1,g1(j,i)
-       enddo
-      enddo
-       
-      call interp(e1(:,imax1),g1(:,imax1),imax1-1,shift1,g_)  
-      g_ = 2.0d0*pi*g_
-      shift1 = shift1 - abs(e(1))
-      !write(*,'(1X,A9,f8.3)')"Shift 1: ",shift1-abs(e(1))
-      !write(*,'(I2,A3,E23.15)')inmax," ",g_
-     
-      ! March 03, 2016 Tsveta
-      write(237,'(I3,A3,E23.15)')inmax," ",g_
-      
-      deallocate(sk,e1,g1)
+  allocate(gord(0:nmax))
+  allocate(sk(0:nmax))
+  allocate(e1(nmax,nmax), g1(nmax,nmax))
+  gord = 0d0
+
+  shift1 = shift1 + abs(e(1))
+  e(:) = e(:) + shift1
+  call imaging(npt,e,g,nmax,nmax,e1,g1)
+  e(:) = e(:) - shift1
+
+  do i = nmin, nmax
+    write(fname, '(A8,I1,A4)')"gamma.order.",i,".txt"
+    open(238,file=fname)
+    do  j = nmin, i-1
+       write(238,'(2(f20.16,1X))')e1(j,i)-shift1,g1(j,i)*2.0d0*pi*27211
+    enddo
+    close(238)
+  enddo
+
+  do imax1 = nmin, nmax
+    write(*,*)"Interp at order", imax1
+    call interp(e1(:,imax1),g1(:,imax1),imax1-1,shift1,g_)
+    g_ = 2.0d0*pi*g_
+    gord(imax1) = g_
+    write(*,'(I3,A3,F23.15,A)')imax1," ",g_*27211,' in meV'
   end do
-  close(237)
-  deallocate(e,g)
-    
+
+
+  k = 0
+  do i = nmin, nmax
+   do  j = 1, i-1
+     k = k + 1
+     eallord(k) = e1(j,i)-shift1
+     gallord(k) = g1(j,i)*2.0d0*pi
+   enddo
+  enddo
+  gav = sum(gord(nmin:nmax))/(nmax-nmin+1)
+  stadev = sqrt(sum( (gord(nmin:nmax)-gav)**2) )/(nmax-nmin+1)
+
+  write(*,'(2(f20.12,1X),a)')gav*27210,stadev*27210, 'in meV'
+  gtot = gav*27210
+
+  call sort2(k,eallord,gallord)
+
+  open(222,file="gamma.allorder.txt")
+  do i = 1, k
+    write(222,'(2(f20.12,1X))')eallord(i),gallord(i)*27211
+  enddo
+  close(222)
+  call interp(eallord,gallord,k-1,0q0,g_)
+  write(*,'(a)')"TOTAL RATE"
+  write(*,'(1(f20.12,1X),a)')g_*27210,'in meV'
+
+  deallocate(gord)
+  deallocate(sk,e1,g1)
+
   call ezfio_set_cippres_ifcsf(4)
 
   else 

@@ -34,7 +34,8 @@ program cippres_runci
 
   else
 
-   print*, "Please run cippres_gencsf first"  
+   print*, "Please run cippres_gencsf first or type qp set cippres ifcsf 1"
+   print*, "Note that if you rerun cippres_runci, you should first delete the eigval/vec from EZFIO"
 
   endif
 

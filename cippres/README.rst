@@ -39,3 +39,17 @@ qp run scf
 
 3)  run CI (if ifcsf 1)
  qp run cippres_runci
+
+4)  run Fano (if ifcsf 2)
+ qp set cippres ici1 X
+ qp set cippres ici2 X
+ qp run cippres_fano
+
+4')  run dip (if ifcsf 2)
+ qp set cippres ici1 X
+ qp set cippres ici2 X
+ qp run cippres_dip
+
+5)  run Stieltjes (if ifcsf 3)
+ qp set cippres icifanosta X
+ qp run cippres_stieltjes

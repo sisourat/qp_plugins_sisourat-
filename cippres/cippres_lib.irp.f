@@ -151,52 +151,67 @@ END_PROVIDER
 
  double precision :: hij
 
- twoe_couplings_cippres(:,:) = 0d0
- e_couplings_cippres(:,:) = 0d0
+ logical :: exists
 
- allocate(twoe_csf_mat(n_csf_cippres(ici2),n_csf_cippres(ici1)))
- twoe_csf_mat(:,:) = 0d0
+ call ezfio_has_cippres_efano_cippres(exists)
+ if (exists) then
+   call ezfio_has_cippres_cfano_cippres(exists)
+ endif
 
-  do i = 1, n_csf_cippres(ici1) ! first loop on the csf of the space ispace 
-   do j = 1, n_csf_cippres(ici2)
-    do k = 1, n_det_csf_cippres(i,ici1) ! then on the determinants belonging to the ith CSF of space ispace
-     do l = 1, n_det_csf_cippres(j,ici2)
-      call i_H_j(csf_basis(1,1,k,i,ici1),csf_basis(1,1,l,j,ici2),N_int,hij)
-      twoe_csf_mat(j,i) += hij * coef_det_csf_basis(k,i,ici1) * coef_det_csf_basis(l,j,ici2)
+ if (exists) then
+
+   call ezfio_get_cippres_efano_cippres(e_couplings_cippres)
+   call ezfio_get_cippres_cfano_cippres(twoe_couplings_cippres)
+
+ else
+
+  twoe_couplings_cippres(:,:) = 0d0
+  e_couplings_cippres(:,:) = 0d0
+
+  allocate(twoe_csf_mat(n_csf_cippres(ici2),n_csf_cippres(ici1)))
+  twoe_csf_mat(:,:) = 0d0
+
+   do i = 1, n_csf_cippres(ici1) ! first loop on the csf of the space ispace 
+    do j = 1, n_csf_cippres(ici2)
+     do k = 1, n_det_csf_cippres(i,ici1) ! then on the determinants belonging to the ith CSF of space ispace
+      do l = 1, n_det_csf_cippres(j,ici2)
+       call i_H_j(csf_basis(1,1,k,i,ici1),csf_basis(1,1,l,j,ici2),N_int,hij)
+       twoe_csf_mat(j,i) += hij * coef_det_csf_basis(k,i,ici1) * coef_det_csf_basis(l,j,ici2)
+      enddo
      enddo
-    enddo
 !    print*,j,i,twoe_csf_mat(j,i)
+    enddo
    enddo
-  enddo
 
- allocate(eigval1(n_csf_cippres(ici1)),eigval2(n_csf_cippres(ici2)))
- eigval1(:) = eigvalues_cippres(:,ici1)
- eigval2(:) = eigvalues_cippres(:,ici2)
+  allocate(eigval1(n_csf_cippres(ici1)),eigval2(n_csf_cippres(ici2)))
+  eigval1(:) = eigvalues_cippres(:,ici1)
+  eigval2(:) = eigvalues_cippres(:,ici2)
 
- allocate(eigvec1(n_csf_cippres(ici1),n_csf_cippres(ici1)))
- allocate(eigvec2(n_csf_cippres(ici2),n_csf_cippres(ici2)))
+  allocate(eigvec1(n_csf_cippres(ici1),n_csf_cippres(ici1)))
+  allocate(eigvec2(n_csf_cippres(ici2),n_csf_cippres(ici2)))
 
- eigvec1(:,:) = eigvectors_cippres(:,:,ici1)
- eigvec2(:,:) = eigvectors_cippres(:,:,ici2)
+  eigvec1(:,:) = eigvectors_cippres(:,:,ici1)
+  eigvec2(:,:) = eigvectors_cippres(:,:,ici2)
 
- allocate(twoe_mat(n_csf_cippres(ici2),n_csf_cippres(ici1)))
- twoe_mat(:,:) = 0d0
+  allocate(twoe_mat(n_csf_cippres(ici2),n_csf_cippres(ici1)))
+  twoe_mat(:,:) = 0d0
 
- do i = 1, n_csf_cippres(ici1) ! first loop on the first eigenvectors
-   do j = 1, n_csf_cippres(ici2) ! then on the second eigenvectors
+  do i = 1, n_csf_cippres(ici1) ! first loop on the first eigenvectors
+    do j = 1, n_csf_cippres(ici2) ! then on the second eigenvectors
       do k = 1, n_csf_cippres(ici1) ! loop over the csfs of the ici1 run
         do l = 1, n_csf_cippres(ici2) ! then over the csfs of the ici2 run
           twoe_mat(j,i) += twoe_csf_mat(l,k) * eigvec1(k,i) * eigvec2(l,j)
+        enddo
+      enddo
+      e_couplings_cippres(j,i) = eigval2(j)-eigval1(i)
+!    print*,eigval1(i)-eigval2(j), twoe_mat(j,i)**2
      enddo
     enddo
-    e_couplings_cippres(j,i) = eigval2(j)-eigval1(i)
-!    print*,eigval1(i)-eigval2(j), twoe_mat(j,i)**2
-   enddo
-  enddo
 
- twoe_couplings_cippres(:,:) = twoe_mat(:,:)**2
+   twoe_couplings_cippres(:,:) = twoe_mat(:,:)
 
- deallocate(twoe_csf_mat,eigval1,eigval2,eigvec1,eigvec2,twoe_mat) 
+   deallocate(twoe_csf_mat,eigval1,eigval2,eigvec1,eigvec2,twoe_mat) 
+ endif
 
  END_PROVIDER
 
@@ -283,7 +298,7 @@ END_PROVIDER
    enddo
   enddo
 
- dip_couplings_cippres(:,:) = dip_mat(:,:)**2
+ dip_couplings_cippres(:,:) = dip_mat(:,:)
 
  deallocate(dip_csf_mat,eigval1,eigval2,eigvec1,eigvec2,dip_mat) 
 

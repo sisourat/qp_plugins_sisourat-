@@ -7,11 +7,7 @@
   </general>
 
   <block>
-    <space ne='2' imo='1' fmo='1' />
-  </block>
-
-  <block>
-    <space ne='2' imo='2' fmo='6' />
+    <space ne='2' imo='1' fmo='5' />
   </block>
 
  </cirun>

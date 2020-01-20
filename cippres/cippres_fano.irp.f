@@ -33,7 +33,7 @@ program cippres_fano
 !      call ezfio_get_cippres_ici2(ici2)
      if(ici1/=0 .and. ici2/=0) then
       print*,ici1,ici2
-      print*, twoe_couplings_cippres(:,:)
+!      print*, twoe_couplings_cippres(:,:)
       call ezfio_set_cippres_cfano_cippres(twoe_couplings_cippres)
       call ezfio_set_cippres_efano_cippres(e_couplings_cippres)
       call ezfio_set_cippres_ifcsf(3)
@@ -45,6 +45,7 @@ program cippres_fano
     print*, "ifcsf = ", ifcsf
     print*, "but it should be equal to 2 for Fano calculations"
     print*, "Please run cippres_runci first or type qp set cippres ifcsf 2"
+    print*, "Note that if you rerun cippres_fano, you should first delete the cfano/efano from EZFIO"
 
   endif
 
