@@ -33,11 +33,11 @@ program cippres_fano
 !      call ezfio_get_cippres_ici2(ici2)
      if(ici1/=0 .and. ici2/=0) then
       print*,ici1,ici2
-!      print*, twoe_couplings_cippres(:,:)
-      call ezfio_set_cippres_cfano_cippres(twoe_couplings_cippres)
-      call ezfio_set_cippres_efano_cippres(e_couplings_cippres)
-      call ezfio_set_cippres_ifcsf(3)
-      stop
+      print*, twoe_couplings_cippres(:,:)
+      print*, e_couplings_cippres(:,:)
+       call ezfio_set_cippres_cfano_cippres(twoe_couplings_cippres)
+!      call ezfio_set_cippres_efano_cippres(e_couplings_cippres)
+!      call ezfio_set_cippres_ifcsf(3)
      endif
 
   else 

@@ -168,6 +168,8 @@ END_PROVIDER
   twoe_couplings_cippres(:,:) = 0d0
   e_couplings_cippres(:,:) = 0d0
 
+  print*,"a"
+
   allocate(twoe_csf_mat(n_csf_cippres(ici2),n_csf_cippres(ici1)))
   twoe_csf_mat(:,:) = 0d0
 
@@ -179,19 +181,20 @@ END_PROVIDER
        twoe_csf_mat(j,i) += hij * coef_det_csf_basis(k,i,ici1) * coef_det_csf_basis(l,j,ici2)
       enddo
      enddo
-!    print*,j,i,twoe_csf_mat(j,i)
+    print*,j,i,twoe_csf_mat(j,i)
     enddo
    enddo
 
+  print*,"b"
   allocate(eigval1(n_csf_cippres(ici1)),eigval2(n_csf_cippres(ici2)))
-  eigval1(:) = eigvalues_cippres(:,ici1)
-  eigval2(:) = eigvalues_cippres(:,ici2)
+  eigval1(:) = eigvalues_cippres(1:n_csf_cippres(ici1),ici1)
+  eigval2(:) = eigvalues_cippres(1:n_csf_cippres(ici2),ici2)
 
   allocate(eigvec1(n_csf_cippres(ici1),n_csf_cippres(ici1)))
   allocate(eigvec2(n_csf_cippres(ici2),n_csf_cippres(ici2)))
 
-  eigvec1(:,:) = eigvectors_cippres(:,:,ici1)
-  eigvec2(:,:) = eigvectors_cippres(:,:,ici2)
+  eigvec1(:,:) = eigvectors_cippres(1:n_csf_cippres(ici1),1:n_csf_cippres(ici1),ici1)
+  eigvec2(:,:) = eigvectors_cippres(1:n_csf_cippres(ici2),1:n_csf_cippres(ici2),ici2)
 
   allocate(twoe_mat(n_csf_cippres(ici2),n_csf_cippres(ici1)))
   twoe_mat(:,:) = 0d0
@@ -204,11 +207,12 @@ END_PROVIDER
         enddo
       enddo
       e_couplings_cippres(j,i) = eigval2(j)-eigval1(i)
-!    print*,eigval1(i)-eigval2(j), twoe_mat(j,i)**2
+      print*,eigval1(i)-eigval2(j), twoe_mat(j,i)**2
      enddo
     enddo
 
    twoe_couplings_cippres(:,:) = twoe_mat(:,:)
+   print*,"c"
 
    deallocate(twoe_csf_mat,eigval1,eigval2,eigvec1,eigvec2,twoe_mat) 
  endif
@@ -274,14 +278,14 @@ END_PROVIDER
   enddo
 
  allocate(eigval1(n_csf_cippres(ici1)),eigval2(n_csf_cippres(ici2)))
- eigval1(:) = eigvalues_cippres(:,ici1)
- eigval2(:) = eigvalues_cippres(:,ici2)
+! eigval1(:) = eigvalues_cippres(1:n_csf_cippres(ici1),ici1)
+! eigval2(:) = eigvalues_cippres(1:n_csf_cippres(ici2),ici2)
 
  allocate(eigvec1(n_csf_cippres(ici1),n_csf_cippres(ici1)))
  allocate(eigvec2(n_csf_cippres(ici2),n_csf_cippres(ici2)))
 
- eigvec1(:,:) = eigvectors_cippres(:,:,ici1)
- eigvec2(:,:) = eigvectors_cippres(:,:,ici2)
+! eigvec1(:,:) = eigvectors_cippres(1:n_csf_cippres(ici1),1:n_csf_cippres(ici1),ici1)
+! eigvec2(:,:) = eigvectors_cippres(1:n_csf_cippres(ici2),1:n_csf_cippres(ici2),ici2)
 
  allocate(dip_mat(n_csf_cippres(ici2),n_csf_cippres(ici1)))
  dip_mat(:,:) = 0d0
@@ -298,7 +302,7 @@ END_PROVIDER
    enddo
   enddo
 
- dip_couplings_cippres(:,:) = dip_mat(:,:)
+! dip_couplings_cippres(:,:) = dip_mat(:,:)
 
  deallocate(dip_csf_mat,eigval1,eigval2,eigvec1,eigvec2,dip_mat) 
 
