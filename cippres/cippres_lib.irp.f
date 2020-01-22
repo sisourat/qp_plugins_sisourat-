@@ -227,11 +227,6 @@ END_PROVIDER
     call ezfio_get_cippres_efano_cippres(efano_cippres)
  END_PROVIDER
 
-BEGIN_PROVIDER [integer, ixyz]
- implicit none
-    call ezfio_get_cippres_ixyz(ixyz)
-END_PROVIDER 
-
  BEGIN_PROVIDER [double precision, dip_couplings_cippres, (n_csf_max,n_csf_max)]
 &BEGIN_PROVIDER [double precision, edip_couplings_cippres, (n_csf_max,n_csf_max)]
  use general
@@ -242,67 +237,118 @@ END_PROVIDER
 
  double precision :: hij
 
- if(ixyz==1) then
-    w1e(:,:) = mo_dipole_x(:,:)
- elseif(ixyz==2) then
-    w1e(:,:) = mo_dipole_y(:,:)
- elseif(ixyz==3) then
-    w1e(:,:) = mo_dipole_z(:,:)
- else
-    print*,"ixyz should be 1, 2 or 3"
-    stop
- endif
+ logical :: exists
 
-! do i = 1, mo_num
-!   do j = 1, mo_num
-!     print*,'dipMO',j,i,w1e(j,i)
-!   enddo
-!  enddo
+   dip_couplings_cippres(:,:) = 0d0
+   edip_couplings_cippres(:,:) = 0d0
 
- dip_couplings_cippres(:,:) = 0d0
- edip_couplings_cippres(:,:) = 0d0
+   allocate(dip_csf_mat(n_csf_cippres(ici2),n_csf_cippres(ici1)))
+ 
+   allocate(eigval1(n_csf_cippres(ici1)),eigval2(n_csf_cippres(ici2)))
+   eigval1(:) = eigvalues_cippres(1:n_csf_cippres(ici1),ici1)
+   eigval2(:) = eigvalues_cippres(1:n_csf_cippres(ici2),ici2)
 
- allocate(dip_csf_mat(n_csf_cippres(ici2),n_csf_cippres(ici1)))
- dip_csf_mat(:,:) = 0d0
+   allocate(eigvec1(n_csf_cippres(ici1),n_csf_cippres(ici1)))
+   allocate(eigvec2(n_csf_cippres(ici2),n_csf_cippres(ici2)))
+   eigvec1(:,:) = eigvectors_cippres(1:n_csf_cippres(ici1),1:n_csf_cippres(ici1),ici1)
+   eigvec2(:,:) = eigvectors_cippres(1:n_csf_cippres(ici2),1:n_csf_cippres(ici2),ici2)
 
-  do i = 1, n_csf_cippres(ici1) ! first loop on the csf of the space ispace 
-   do j = 1, n_csf_cippres(ici2)
-    do k = 1, n_det_csf_cippres(i,ici1) ! then on the determinants belonging to the ith CSF of space ispace
-     do l = 1, n_det_csf_cippres(j,ici2)
-      call i_w1e_j(csf_basis(1,1,k,i,ici1),csf_basis(1,1,l,j,ici2),N_int,w1e,hij)
-      dip_csf_mat(j,i) += hij * coef_det_csf_basis(k,i,ici1) * coef_det_csf_basis(l,j,ici2)
+   allocate(dip_mat(n_csf_cippres(ici2),n_csf_cippres(ici1)))
+
+! along X
+   dip_csf_mat(:,:) = 0d0
+   dip_mat(:,:) = 0d0
+   w1e(:,:) = mo_dipole_x(:,:)
+
+   do i = 1, n_csf_cippres(ici1) ! first loop on the csf of the space ispace 
+    do j = 1, n_csf_cippres(ici2)
+     do k = 1, n_det_csf_cippres(i,ici1) ! then on the determinants belonging to the ith CSF of space ispace
+      do l = 1, n_det_csf_cippres(j,ici2)
+       call i_w1e_j(csf_basis(1,1,k,i,ici1),csf_basis(1,1,l,j,ici2),N_int,w1e,hij)
+       dip_csf_mat(j,i) += hij * coef_det_csf_basis(k,i,ici1) * coef_det_csf_basis(l,j,ici2)
+      enddo
      enddo
+!     print*,j,i,dip_csf_mat(j,i)
     enddo
-!    print*,j,i,dip_csf_mat(j,i)
    enddo
-  enddo
 
- allocate(eigval1(n_csf_cippres(ici1)),eigval2(n_csf_cippres(ici2)))
-! eigval1(:) = eigvalues_cippres(1:n_csf_cippres(ici1),ici1)
-! eigval2(:) = eigvalues_cippres(1:n_csf_cippres(ici2),ici2)
-
- allocate(eigvec1(n_csf_cippres(ici1),n_csf_cippres(ici1)))
- allocate(eigvec2(n_csf_cippres(ici2),n_csf_cippres(ici2)))
-
-! eigvec1(:,:) = eigvectors_cippres(1:n_csf_cippres(ici1),1:n_csf_cippres(ici1),ici1)
-! eigvec2(:,:) = eigvectors_cippres(1:n_csf_cippres(ici2),1:n_csf_cippres(ici2),ici2)
-
- allocate(dip_mat(n_csf_cippres(ici2),n_csf_cippres(ici1)))
- dip_mat(:,:) = 0d0
-
- do i = 1, n_csf_cippres(ici1) ! first loop on the first eigenvectors
+  do i = 1, n_csf_cippres(ici1) ! first loop on the first eigenvectors
    do j = 1, n_csf_cippres(ici2) ! then on the second eigenvectors
-      do k = 1, n_csf_cippres(ici1) ! loop over the csfs of the ici1 run
-        do l = 1, n_csf_cippres(ici2) ! then over the csfs of the ici2 run
-          dip_mat(j,i) += dip_csf_mat(l,k) * eigvec1(k,i) * eigvec2(l,j)
+    do k = 1, n_csf_cippres(ici1) ! loop over the csfs of the ici1 run
+     do l = 1, n_csf_cippres(ici2) ! then over the csfs of the ici2 run
+        dip_mat(j,i) += dip_csf_mat(l,k) * eigvec1(k,i) * eigvec2(l,j)
      enddo
     enddo
-    edip_couplings_cippres(j,i) = eigval2(j)-eigval1(i)
-!    print*,eigval1(i)-eigval2(j), dip_mat(j,i)**2
+     edip_couplings_cippres(j,i) = eigval2(j)-eigval1(i)
+     print*,"x",j,i,dip_mat(j,i)
    enddo
   enddo
 
-! dip_couplings_cippres(:,:) = dip_mat(:,:)
+  dip_couplings_cippres(1:n_csf_cippres(ici2),1:n_csf_cippres(ici1)) += dip_mat(:,:)**2
+  call ezfio_set_cippres_cdipx_cippres(dip_mat)
+
+! along Y
+   dip_csf_mat(:,:) = 0d0
+   dip_mat(:,:) = 0d0
+   w1e(:,:) = mo_dipole_y(:,:)
+
+   do i = 1, n_csf_cippres(ici1) ! first loop on the csf of the space ispace 
+    do j = 1, n_csf_cippres(ici2)
+     do k = 1, n_det_csf_cippres(i,ici1) ! then on the determinants belonging to the ith CSF of space ispace
+      do l = 1, n_det_csf_cippres(j,ici2)
+       call i_w1e_j(csf_basis(1,1,k,i,ici1),csf_basis(1,1,l,j,ici2),N_int,w1e,hij)
+       dip_csf_mat(j,i) += hij * coef_det_csf_basis(k,i,ici1) * coef_det_csf_basis(l,j,ici2)
+      enddo
+     enddo
+!     print*,j,i,dip_csf_mat(j,i)
+    enddo
+   enddo
+
+  do i = 1, n_csf_cippres(ici1) ! first loop on the first eigenvectors
+   do j = 1, n_csf_cippres(ici2) ! then on the second eigenvectors
+    do k = 1, n_csf_cippres(ici1) ! loop over the csfs of the ici1 run
+     do l = 1, n_csf_cippres(ici2) ! then over the csfs of the ici2 run
+        dip_mat(j,i) += dip_csf_mat(l,k) * eigvec1(k,i) * eigvec2(l,j)
+     enddo
+    enddo
+     print*,"y",j,i,dip_mat(j,i)
+   enddo
+  enddo
+
+  dip_couplings_cippres(1:n_csf_cippres(ici2),1:n_csf_cippres(ici1)) += dip_mat(:,:)**2
+  call ezfio_set_cippres_cdipy_cippres(dip_mat)
+   
+! along Z
+   dip_csf_mat(:,:) = 0d0
+   dip_mat(:,:) = 0d0
+   w1e(:,:) = mo_dipole_z(:,:)
+
+   do i = 1, n_csf_cippres(ici1) ! first loop on the csf of the space ispace 
+    do j = 1, n_csf_cippres(ici2)
+     do k = 1, n_det_csf_cippres(i,ici1) ! then on the determinants belonging to the ith CSF of space ispace
+      do l = 1, n_det_csf_cippres(j,ici2)
+       call i_w1e_j(csf_basis(1,1,k,i,ici1),csf_basis(1,1,l,j,ici2),N_int,w1e,hij)
+       dip_csf_mat(j,i) += hij * coef_det_csf_basis(k,i,ici1) * coef_det_csf_basis(l,j,ici2)
+      enddo
+     enddo
+!     print*,j,i,dip_csf_mat(j,i)
+    enddo
+   enddo
+
+  do i = 1, n_csf_cippres(ici1) ! first loop on the first eigenvectors
+   do j = 1, n_csf_cippres(ici2) ! then on the second eigenvectors
+    do k = 1, n_csf_cippres(ici1) ! loop over the csfs of the ici1 run
+     do l = 1, n_csf_cippres(ici2) ! then over the csfs of the ici2 run
+        dip_mat(j,i) += dip_csf_mat(l,k) * eigvec1(k,i) * eigvec2(l,j)
+     enddo
+    enddo
+     print*,"z",j,i,dip_mat(j,i)
+   enddo
+  enddo
+
+  dip_couplings_cippres(1:n_csf_cippres(ici2),1:n_csf_cippres(ici1)) += dip_mat(:,:)**2
+  dip_couplings_cippres(1:n_csf_cippres(ici2),1:n_csf_cippres(ici1)) = sqrt(dip_couplings_cippres(1:n_csf_cippres(ici2),1:n_csf_cippres(ici1)))
+  call ezfio_set_cippres_cdipz_cippres(dip_mat)
 
  deallocate(dip_csf_mat,eigval1,eigval2,eigvec1,eigvec2,dip_mat) 
 

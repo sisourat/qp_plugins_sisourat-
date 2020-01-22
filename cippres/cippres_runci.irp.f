@@ -24,7 +24,7 @@ program cippres_runci
 
     do i = 1, n_ciruns_cippres
 !      print*,'ncsfs',i, n_csf_cippres(i) 
-      print*,'CI run = ', i
+      eigvalues_cippres(1:n_csf_cippres(i),i) += nuclear_repulsion
       print*,'CI eigval =', eigvalues_cippres(1:n_csf_cippres(i),i)
     enddo
 

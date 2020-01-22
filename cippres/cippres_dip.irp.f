@@ -10,6 +10,9 @@ program cippres_dip
 ! cippres_dip computes the dipole matrice couplings between the CI eigenvectors of ici1 and ici2 runs
   END_DOC
 
+  double precision :: nucl_contrib
+  integer :: i, j
+
 ! TODO Read the info (ici1, ici2,...) from an input
 
 ! GENERAL
@@ -21,7 +24,7 @@ program cippres_dip
   print*,ifcsf
   if(ifcsf==2) then
 
-    print*,ici1,ici2,ixyz
+    print*,ici1,ici2
     if(ici1==0) then
        print*, "Please set ici1 (initial states)"
        print*, "qp set cippres ici1 X "
@@ -34,23 +37,20 @@ program cippres_dip
        stop
     endif
 
-    if(ixyz==0) then
-       print*, "Please set ixyz (1 for x, 2 for y and 3 for z)"
-       print*, "qp set cippres ixyz X "
-       stop
-    endif
-
-!      call ezfio_get_cippres_ici1(ici1)
-!      call ezfio_get_cippres_ici2(ici2)
-!      call ezfio_get_cippres_ixyz(ixyz)
-
      
-     if(ici1/=0 .and. ici2/=0 .and. ixyz/=0) then
-      print*,dip_couplings_cippres
-      call ezfio_set_cippres_cfano_cippres(dip_couplings_cippres)
-      call ezfio_set_cippres_efano_cippres(edip_couplings_cippres)
-      call ezfio_set_cippres_ifcsf(3)
-      stop
+     if(ici1/=0 .and. ici2/=0) then
+!      print*,dip_couplings_cippres
+      call ezfio_set_cippres_cdip_cippres(dip_couplings_cippres)
+      call ezfio_set_cippres_edip_cippres(edip_couplings_cippres)
+      nucl_contrib = 0d0
+      do i = 1, nucl_num
+       do j = 1, 3
+        nucl_contrib += nucl_charge(i)*nucl_coord(i,j)
+       enddo
+      enddo
+      print*,'Nuclear Contribution to be added to "diagonal" elements',nucl_contrib 
+
+!      call ezfio_set_cippres_ifcsf(3)
      endif
 
 
