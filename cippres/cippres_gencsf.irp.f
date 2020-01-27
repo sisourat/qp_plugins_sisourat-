@@ -115,5 +115,10 @@ subroutine generate_csfs(finput)
   deallocate(nsta,prttol,ncsf,ndet,coefdet,csf_basis_tmp)
   deallocate(occ_a,occ_b)
 
+  PROVIDE ezfio_filename
+  call system('mv parser.txt '//trim(ezfio_filename)//'/cippres/')
+  call system('mv header*.txt '//trim(ezfio_filename)//'/cippres/')
+  call system('mv list*.txt '//trim(ezfio_filename)//'/cippres/')
+
 end subroutine generate_csfs
 
