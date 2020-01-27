@@ -7,6 +7,8 @@ program cippres_fano
 ! cippres_fano computes the H matrice couplings between the CI eigenvectors of ici1 and ici2 runs
   END_DOC
 
+ integer :: i
+
 ! TODO Read the info (ici1, ici2,...) from an input
 
 ! GENERAL
@@ -35,6 +37,11 @@ program cippres_fano
 !      print*,ici1,ici2
       print*, twoe_couplings_cippres(:,:)
       print*, e_couplings_cippres(:,:)
+    
+      do i = 1, n_csf_cippres(ici2) 
+        print*, e_couplings_cippres(i,1), twoe_couplings_cippres(i,1)
+      enddo
+
       call ezfio_set_cippres_cfano_cippres(twoe_couplings_cippres)
       call ezfio_set_cippres_efano_cippres(e_couplings_cippres)
 !      call ezfio_set_cippres_ifcsf(3)
