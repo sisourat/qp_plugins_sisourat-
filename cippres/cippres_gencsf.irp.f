@@ -54,6 +54,9 @@ subroutine generate_csfs(finput)
  double precision, dimension(:,:,:), allocatable :: coefdet
  integer(bit_kind), allocatable :: csf_basis_tmp(:,:,:,:,:)
 
+ integer :: n1, n2, n3, n4
+ character(len=lenmax) :: fh, fl
+
 ! the python script will write the info and list of CSFs, for as many CIruns as given in finput, into header$irun.txt and list$irun.txt ($irun=1,2,3,....)
   call system('python $QP_ROOT/plugins/qp_plugins_sisourat-/cippres/scripts/generate_csfs.py '//trim(finput))
 
@@ -80,8 +83,27 @@ subroutine generate_csfs(finput)
 ! read the info for each CI run
   do irun = 1, nciruns
 
-   open(unit=21,file='header'//achar(48+irun)//'.txt')
-   open(unit=22,file='list'//achar(48+irun)//'.txt')
+   n1 = modulo(floor(irun/1000d0),10)
+   n2 = modulo(floor(irun/100d0),10)
+   n3 = modulo(floor(irun/10d0),10)
+   n4 = modulo(irun,10)
+
+   if(irun<10) then
+     fh = 'header'//achar(48+irun)//'.txt'
+     fl = 'list'//achar(48+irun)//'.txt'
+   elseif(irun<100) then
+     fh = 'header'//achar(48+n3)//achar(48+n4)//'.txt'
+     fl = 'list'//achar(48+n3)//achar(48+n4)//'.txt'
+   elseif(irun<1000) then
+     fh = 'header'//achar(48+n2)//achar(48+n3)//achar(48+n4)//'.txt'
+     fl = 'list'//achar(48+n2)//achar(48+n3)//achar(48+n4)//'.txt'
+   elseif(irun<10000) then
+     fh = 'header'//achar(48+n1)//achar(48+n2)//achar(48+n3)//achar(48+n4)//'.txt'
+     fl = 'list'//achar(48+n1)//achar(48+n2)//achar(48+n3)//achar(48+n4)//'.txt'
+   endif
+
+   open(unit=21,file=fh)
+   open(unit=22,file=fl)
 
     read(21,*)nsta(irun),prttol(irun)
     read(21,*)nalpha,nbeta

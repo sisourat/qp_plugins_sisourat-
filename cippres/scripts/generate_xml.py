@@ -16,7 +16,7 @@ print ""
 
 print "    <general>"
 print "      <spin>", spin, "</spin>"
-print "      <electron' na='", na, " nb=", nb, " />"
+print "      <electron na='", na, "' nb='", nb, "' />"
 print "    </general>"
 
 print ""
@@ -35,7 +35,7 @@ for i in range(5,10):
 
   print "    <general>"
   print "      <spin>", spin, "</spin>"
-  print "      <electron' na='", na, " nb=", nb, " />"
+  print "      <electron na='", na, "' nb='", nb, "' />"
   print "    </general>"
 
   print ""
