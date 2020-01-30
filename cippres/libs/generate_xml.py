@@ -31,21 +31,21 @@ print ""
 
 for i in range(5,10):
 
-  print"  <cirun>"
+ print"  <cirun>"
 
-  print "    <general>"
-  print "      <spin>", spin, "</spin>"
-  print "      <electron na='", na, "' nb='", nb, "' />"
-  print "    </general>"
+ print "    <general>"
+ print "      <spin>", spin, "</spin>"
+ print "      <electron na='", na, "' nb='", nb, "' />"
+ print "    </general>"
 
-  print ""
+ print ""
 
-  print "    <block>"
-  print "      <space ne='", 1, "' imo='", i, "' fmo='", i, "' />"
-  print "    </block>"
+ print "    <block>"
+ print "      <space ne='", 1, "' imo='", i, "' fmo='", i, "' />"
+ print "    </block>"
 
-  print "  </cirun>"
-  print ""
+ print "  </cirun>"
+ print ""
 
 print "</input>"
 

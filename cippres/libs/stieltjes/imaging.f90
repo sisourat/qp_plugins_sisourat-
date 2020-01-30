@@ -1,143 +1,9 @@
-program cippres_stieltjes
-  use general
-  use interpolation
-  implicit none
-  BEGIN_DOC
-! CIPPRES stands for Configuration Interaction Plugin for Photoionized and Resonant Electronic States.
-! ORMAS-CI calculations are performed to compute bound and approximate continuum states. Hamiltonian and Dipole coupling matrix elements can then be computed between these states. Finally, Stieltjes imaging technique is applied to recover the correct continuum coupling matrix elements.
-! cippres_stieltjes computes the decay widths using Stieltjes imaging and the Fano couplings obtained from cippres_fano
-  END_DOC
-
-  integer :: npt
-  integer, parameter :: QR_K = 16 !selected_real_kind (32)
-  real (kind=QR_K), allocatable, dimension(:) :: e, g
-
-  integer :: nmin=5, nmax = 5 ! according to Mueller-Plathe and Diercksen Stieltjes is inaccurate for n>=15
-!  real (kind=QR_K), dimension(0:nmax) :: sk
-!  real (kind=QR_K), dimension(nmax,nmax) ::  e1, g1, e2, g2
-  real (kind=QR_K), allocatable, dimension(:) :: sk, gord
-  real (kind=QR_K), allocatable, dimension(:,:) ::  e1, g1
-  real (kind=QR_K), allocatable, dimension(:) :: eallord,gallord
-  real (kind=QR_K) :: shift1 = 0.1d0
-  integer :: imax1, imax2
-  integer :: inmax, ishift
-  integer :: i, j, k, ichan
-  integer :: exit_cycle
-  character(len=60) :: fname
-
-! Tsveta
-  real (kind=QR_K) :: g_
-  real (kind=QR_K) :: temp, gav, stadev, gtot
-
-  integer :: nsta
-  real (kind=QR_K), allocatable, dimension(:,:) :: gpart
-  real (kind=QR_K), allocatable, dimension(:) :: st_gpart
-
-! TODO Read couplings in EZFIO
-! TODO Adapt Stieltjes code
-! TODO Print results in EZFIO (some plots would be nice)
-
-! GENERAL
-! TODO Compute dipole matrix elements between two different CI runs
-! TODO Include Stieltjes in qp
-
-  if(ifcsf==3) then
-
-    if(ifanosta==0) then
-       print*, "Please set ifanosta"
-       print*, "qp set cippres ifanosta X "
-       stop
-    endif
-
-! reads and sorts energy and matrix elements
-
-  npt = n_csf_cippres(ici2)
-  allocate(e(npt),g(npt))
-  e(:) = efano_cippres(1:n_csf_cippres(ici2),ifanosta)
-  g(:) = abs(cfano_cippres(1:n_csf_cippres(ici2),ifanosta))
- 
-  if(sum(g)==0d0) then
-    write(*,*)"All matrix elements are zero, I stop"
-    stop
-  endif
-
-  call sort2(npt,e,g)
-  ishift = 2
-  shift1 = ishift * 0.1d0
-
-  allocate(gord(0:nmax))
-  allocate(sk(0:nmax))
-  allocate(e1(nmax,nmax), g1(nmax,nmax))
-  gord = 0d0
-
-  shift1 = shift1 + abs(e(1))
-  e(:) = e(:) + shift1
-  call imaging(npt,e,g,nmax,nmax,e1,g1)
-  e(:) = e(:) - shift1
-
-  do i = nmin, nmax
-    write(fname, '(A8,I1,A4)')"gamma.order.",i,".txt"
-    open(238,file=fname)
-    do  j = nmin, i-1
-       write(238,'(2(f20.16,1X))')e1(j,i)-shift1,g1(j,i)*2.0d0*pi*27211
-    enddo
-    close(238)
-  enddo
-
-  do imax1 = nmin, nmax
-    write(*,*)"Interp at order", imax1
-    call interp(e1(:,imax1),g1(:,imax1),imax1-1,shift1,g_)
-    g_ = 2.0d0*pi*g_
-    gord(imax1) = g_
-    write(*,'(I3,A3,F23.15,A)')imax1," ",g_*27211,' in meV'
-  end do
-
-
-  k = 0
-  do i = nmin, nmax
-   do  j = 1, i-1
-     k = k + 1
-     eallord(k) = e1(j,i)-shift1
-     gallord(k) = g1(j,i)*2.0d0*pi
-   enddo
-  enddo
-  gav = sum(gord(nmin:nmax))/(nmax-nmin+1)
-  stadev = sqrt(sum( (gord(nmin:nmax)-gav)**2) )/(nmax-nmin+1)
-
-  write(*,'(2(f20.12,1X),a)')gav*27210,stadev*27210, 'in meV'
-  gtot = gav*27210
-
-  call sort2(k,eallord,gallord)
-
-  open(222,file="gamma.allorder.txt")
-  do i = 1, k
-    write(222,'(2(f20.12,1X))')eallord(i),gallord(i)*27211
-  enddo
-  close(222)
-  call interp(eallord,gallord,k-1,0q0,g_)
-  write(*,'(a)')"TOTAL RATE"
-  write(*,'(1(f20.12,1X),a)')g_*27210,'in meV'
-
-  deallocate(gord)
-  deallocate(sk,e1,g1)
-
-  call ezfio_set_cippres_ifcsf(4)
-
-  else 
-
-    print*, "Please run cippres_fano first"
-
-  endif
-
-end program cippres_stieltjes
-
-
 subroutine imaging(npt,e_point,g_point,nmax,maxord,eorder,gorder)
 implicit none
 
  integer :: nmax
 
- integer, parameter :: QR_K = 16 ! selected_real_kind (32) ! use quadruple precision
+ integer, parameter :: QR_K = selected_real_kind (32) ! use quadruple precision
  double precision, parameter :: overmax=1d0 ! set arbitrary to 1 to determine the maximum order of pol.
 
  integer, intent(in) :: npt
@@ -264,11 +130,11 @@ implicit none
 ! fill the coefficients matrix
        do i=1,iord
           diag(i)=acoef(i)
-          write(*,*)"diag",i,diag(i)
+!          write(*,*)"diag",i,diag(i)
        end do
        do i=2,iord
           offdiag(i)=-qsqrt(bcoef(i-1))
-          write(*,*)"offdiag",i,offdiag(i)
+!          write(*,*)"offdiag",i,offdiag(i)
        end do
 
 ! diagonalize the coefficients matrix
@@ -288,7 +154,7 @@ implicit none
 ! fill the Stieltjes energy and gamma arrays
 ! note that the eigenvalues are inverse energies and are given in ascending order 
        do i=1,iord
-          print*,diag(iord+1-i),abvec(1,iord+1-i)**2
+!          print*,diag(iord+1-i),abvec(1,iord+1-i)**2
           enew(i)=1.q0/diag(iord+1-i)
           gnew(i)=bcoef(0)*abvec(1,iord+1-i)**2
        end do
@@ -304,5 +170,5 @@ implicit none
 
    enddo ! loop over iord  
 
-end subroutine imaging
 
+end subroutine
